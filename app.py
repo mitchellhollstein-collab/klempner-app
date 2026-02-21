@@ -68,4 +68,5 @@ def main():
 
     # SIDEBAR: SUCHFUNKTION
     st.sidebar.header("🔍 Intelligente Suche")
-    search_query = st.sidebar.text_input("Stichwort suchen...", placeholder="z.
+  search_query = st.sidebar.text_input("Stichwort suchen...", placeholder="z.B. Kupfer, Dachrinne")
+
