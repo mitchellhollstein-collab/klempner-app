@@ -74,4 +74,45 @@ with col_main:
         
         # Original PDF
         st.subheader("Original Beleg")
+
         display_pdf("Gesamtordner.pdf", st.session_state.page)
+        # Funktion zum sicheren Auslesen
+def get_clean_text(doc, page_num):
+    try:
+        # Seite laden (Index beginnt bei 0)
+        page = doc.load_page(page_num - 1)
+        
+        # Verschiedene Extraktionsmethoden probieren
+        text = page.get_text("text")
+        
+        if not text.strip():
+            # Falls kein Text kommt, versuchen wir es über Blöcke
+            blocks = page.get_text("blocks")
+            text = "\n".join([b[4] for b in blocks if isinstance(b[4], str)])
+            
+        return text if text.strip() else "Kein lesbarer Text auf dieser Seite gefunden."
+    except Exception as e:
+        return f"Fehler beim Lesen der Seite: {e}"
+
+# In der App-Ansicht dann:
+if "current_page" in st.session_state:
+    st.subheader("📖 Klartext der Seite")
+    inhalt = get_clean_text(doc, st.session_state.current_page)
+    
+    # Text in einem schöneren Feld mit Scrollbalken anzeigen
+    st.text_area(label="Inhalt:", value=inhalt, height=300)
+    search_term = st.sidebar.text_input("🔍 Suchbegriff eingeben")
+if search_term:
+    found_pages = []
+    # Wir suchen in allen Seiten
+    for i in range(len(doc)):
+        if search_term.lower() in doc[i].get_text().lower():
+            found_pages.append(i + 1)
+    
+    if found_pages:
+        st.sidebar.success(f"{len(found_pages)} Treffer gefunden:")
+        for p in found_pages[:15]: # Zeige die ersten 15 Treffer
+            if st.sidebar.button(f"Seite {p} öffnen", key=f"p_{p}"):
+                st.session_state.current_page = p
+    else:
+        st.sidebar.warning("Keine Treffer.")
